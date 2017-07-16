@@ -22,6 +22,14 @@ module Pocketsphinx
       @decoder ||= Decoder.new(configuration)
     end
 
+    def buffer
+      @buffer ||= FFI::MemoryPointer.new(:int16, max_samples)
+    end
+
+    def max_samples
+      2048
+    end
+
     def configuration
       @configuration ||= Configuration.default
     end
@@ -43,20 +51,16 @@ module Pocketsphinx
     # Recognize speech and return hypotheses
     #
     # @param [Fixnum] max_samples Number of samples to process at a time
-    def recognize(max_samples = 2048)
+    def recognize
       unless ALGORITHMS.include?(algorithm)
         raise NotImplementedError, "Unknown speech recognition algorithm: #{algorithm}"
       end
 
-      start unless recognizing?
-
-      FFI::MemoryPointer.new(:int16, max_samples) do |buffer|
-        send("recognize_#{algorithm}", max_samples, buffer) do |speech|
-          return speech
-        end
+      found_speech = nil
+      send("recognize_#{algorithm}", max_samples, buffer) do |speech|
+        found_speech = speech
       end
-    ensure
-      stop
+      found_speech
     end
 
     def in_speech?
