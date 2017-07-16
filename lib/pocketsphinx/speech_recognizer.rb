@@ -102,6 +102,21 @@ module Pocketsphinx
       end
     end
 
+    def process_audio(buffer, max_samples)
+      sample_count = recordable.read_audio(buffer, max_samples)
+
+      if sample_count
+        decoder.process_raw(buffer, sample_count)
+
+        # Check for a delay for example in case of non-blocking live audio
+        if recordable.respond_to?(:read_audio_delay)
+          sleep recordable.read_audio_delay(max_samples)
+        end
+      end
+
+      sample_count
+    end
+    
     private
 
     # Yields as soon as any hypothesis is available
@@ -136,21 +151,6 @@ module Pocketsphinx
       end
 
       process_audio(buffer, max_samples)
-    end
-
-    def process_audio(buffer, max_samples)
-      sample_count = recordable.read_audio(buffer, max_samples)
-
-      if sample_count
-        decoder.process_raw(buffer, sample_count)
-
-        # Check for a delay for example in case of non-blocking live audio
-        if recordable.respond_to?(:read_audio_delay)
-          sleep recordable.read_audio_delay(max_samples)
-        end
-      end
-
-      sample_count
     end
   end
 end
