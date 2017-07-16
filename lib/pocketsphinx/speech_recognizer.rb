@@ -40,10 +40,10 @@ module Pocketsphinx
       end
     end
 
-    # Recognize speech and yield hypotheses in infinite loop
+    # Recognize speech and return hypotheses
     #
     # @param [Fixnum] max_samples Number of samples to process at a time
-    def recognize(max_samples = 2048, &b)
+    def recognize(max_samples = 2048)
       unless ALGORITHMS.include?(algorithm)
         raise NotImplementedError, "Unknown speech recognition algorithm: #{algorithm}"
       end
@@ -51,8 +51,8 @@ module Pocketsphinx
       start unless recognizing?
 
       FFI::MemoryPointer.new(:int16, max_samples) do |buffer|
-        loop do
-          send("recognize_#{algorithm}", max_samples, buffer, &b) or break
+        send("recognize_#{algorithm}", max_samples, buffer) do |speech|
+          return speech
         end
       end
     ensure
