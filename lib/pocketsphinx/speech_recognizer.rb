@@ -56,12 +56,9 @@ module Pocketsphinx
         raise NotImplementedError, "Unknown speech recognition algorithm: #{algorithm}"
       end
 
-      found_speech = nil
-      buffer.clear
       send("recognize_#{algorithm}", max_samples, buffer) do |speech|
-        found_speech = speech
+        yield speech
       end
-      found_speech
     end
 
     def in_speech?
